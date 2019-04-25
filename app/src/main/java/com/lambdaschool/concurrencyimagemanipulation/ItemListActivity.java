@@ -184,13 +184,75 @@ public class ItemListActivity extends AppCompatActivity {
                                 original.getHeight(),
                                 Bitmap.Config.ARGB_8888);
 
-                        for(int x = 0; x < resultBitmap.getWidth(); ++x) {
-                            for(int y = 0; y < resultBitmap.getHeight(); ++y) {
+                        for (int x = 0; x < resultBitmap.getWidth(); ++x) {
+                            for (int y = 0; y < resultBitmap.getHeight(); ++y) {
                                 int oldPixel = original.getPixel(x, y);
 
-                                int greyValue = (Color.red(oldPixel) + Color.green(oldPixel) + Color.blue(oldPixel)) / 3; // 0xab
-                                // 0xffababab
-                                int newPixel = (((0xff * 0x100 + greyValue) * 0x100 + greyValue) * 0x100 + greyValue);
+                                // Convert to Grayscale
+                                // can multiply this with a percentage to adjust the brightness
+                                /*int greyValue = (Color.red(oldPixel) + Color.green(oldPixel) + Color.blue(oldPixel)) / 3;
+                                int newPixel  = (((0xff * 0x100 + greyValue) * 0x100 + greyValue) * 0x100 + greyValue);*/
+
+                                // Alternate Colors
+                                /*int       red        = 0, green = 0, blue = 0;
+                                final int multiplier = 100;
+                                final int value      = (x + y) % (multiplier * 3);
+                                if (value < multiplier) {
+                                    red = Color.red(oldPixel);
+                                } else if (value < multiplier * 2) {
+                                    green = Color.green(oldPixel);
+                                } else if (value < multiplier * 3) {
+                                    blue = Color.blue(oldPixel);
+                                }
+                                int newPixel = (((0xff * 0x100 + red) * 0x100 + green) * 0x100 + blue);*/
+
+                                // Grid Original Colors
+                                /*int halfWidth  = original.getWidth() / 2;
+                                int halfHeight = original.getHeight() / 2;
+                                int red        = 0, green = 0, blue = 0;
+                                if (x < halfWidth && y < halfHeight) {
+                                    red = Color.red(oldPixel);
+                                } else if (x > halfWidth && y < halfHeight) {
+                                    green = Color.green(oldPixel);
+                                } else if (x < halfWidth && y > halfHeight) {
+                                    blue = Color.blue(oldPixel);
+                                } else if (x > halfWidth && y > halfHeight) {
+                                    int greyValue = (Color.red(oldPixel) + Color.green(oldPixel) + Color.blue(oldPixel)) / 3;
+                                    red = greyValue;
+                                    green = greyValue;
+                                    blue = greyValue;
+                                }
+                                int newPixel = (((0xff * 0x100 + red) * 0x100 + green) * 0x100 + blue);*/
+
+                                // Grid Different Colors
+                                /*int halfWidth  = original.getWidth() / 2;
+                                int halfHeight = original.getHeight() / 2;
+                                int red        = 0, green = 0, blue = 0;
+                                if (x < halfWidth && y < halfHeight) {
+                                    red = Color.red(oldPixel); // pink
+                                    blue = Color.blue(oldPixel);
+                                } else if (x > halfWidth && y < halfHeight) {
+                                    red = Color.red(oldPixel);// yellow
+                                    green = Color.green(oldPixel);
+                                } else if (x < halfWidth && y > halfHeight) {
+                                    green = Color.green(oldPixel); // teal
+                                    blue = Color.blue(oldPixel);
+                                } else if (x > halfWidth && y > halfHeight) {
+                                    int greyValue = (Color.red(oldPixel) + Color.green(oldPixel) + Color.blue(oldPixel)) / 3;
+                                    red = greyValue;
+                                    green = greyValue;
+                                    blue = greyValue;
+                                }
+                                int newPixel = (((0xff * 0x100 + red) * 0x100 + green) * 0x100 + blue);*/
+
+                                // Sepia
+                                int red   = (int) ((0.393 * Color.red(oldPixel) + 0.769 * Color.green(oldPixel) + 0.189 * Color.blue(oldPixel)) * .75);
+                                int green = (int) ((0.349 * Color.red(oldPixel) + 0.686 * Color.green(oldPixel) + 0.168 * Color.blue(oldPixel)) * .75);
+                                int blue  = (int) ((0.272 * Color.red(oldPixel) + 0.534 * Color.green(oldPixel) + 0.131 * Color.blue(oldPixel)) * .75);
+
+                                int newPixel = (((0xff * 0x100 + red) * 0x100 + green) * 0x100 + blue);
+
+
                                 resultBitmap.setPixel(x, y, newPixel);
                             }
                         }
