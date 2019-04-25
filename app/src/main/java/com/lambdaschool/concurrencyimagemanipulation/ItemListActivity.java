@@ -3,6 +3,8 @@ package com.lambdaschool.concurrencyimagemanipulation;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -81,7 +83,7 @@ public class ItemListActivity extends AppCompatActivity {
         private final Thread downloadThread, processingThread;
         private final Semaphore imageListLock;
 
-        private final View.OnClickListener         mOnClickListener = new View.OnClickListener() {
+        private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 DummyContent.DummyItem item = (DummyContent.DummyItem) view.getTag();
@@ -121,8 +123,8 @@ public class ItemListActivity extends AppCompatActivity {
             downloadThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    if(mValues.size() > 0) {
-                        for (final ImageContainer container: mValues) {
+                    if (mValues.size() > 0) {
+                        for (final ImageContainer container : mValues) {
                             try {
                                 imageListLock.acquire();
                             } catch (InterruptedException e) {
@@ -152,9 +154,57 @@ public class ItemListActivity extends AppCompatActivity {
             processingThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    for (int i = 0; i < mValues.size(); ++i) {
+                        try {
+                            imageListLock.acquire();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        ImageContainer imageContainer = mValues.get(i);
+                        imageListLock.release();
 
+                        while (imageContainer.getOriginal() == null) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            try {
+                                imageListLock.acquire();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            imageContainer = mValues.get(i);
+                            imageListLock.release();
+                        }
+
+                        final Bitmap original = imageContainer.getOriginal();
+                        final Bitmap resultBitmap = Bitmap.createBitmap(
+                                original.getWidth(),
+                                original.getHeight(),
+                                Bitmap.Config.ARGB_8888);
+
+                        for(int x = 0; x < resultBitmap.getWidth(); ++x) {
+                            for(int y = 0; y < resultBitmap.getHeight(); ++y) {
+                                int oldPixel = original.getPixel(x, y);
+
+                                int greyValue = (Color.red(oldPixel) + Color.green(oldPixel) + Color.blue(oldPixel)) / 3; // 0xab
+                                // 0xffababab
+                                int newPixel = (((0xff * 0x100 + greyValue) * 0x100 + greyValue) * 0x100 + greyValue);
+                                resultBitmap.setPixel(x, y, newPixel);
+                            }
+                        }
+                        try {
+                            imageListLock.acquire();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        mValues.get(i).setModified(resultBitmap);
+                        imageListLock.release();
+                    }
                 }
             });
+            processingThread.start();
         }
 
         @Override
@@ -179,7 +229,7 @@ public class ItemListActivity extends AppCompatActivity {
                     ImageContainer imageContainer = mValues.get(position);
                     imageListLock.release();
 
-                    while(imageContainer.getOriginal() == null) {
+                    while (imageContainer.getOriginal() == null) {
                         try {
                             Thread.sleep(100);
                         } catch (InterruptedException e) {
